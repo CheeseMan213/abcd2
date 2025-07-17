@@ -2,7 +2,6 @@
     ob_start();
     session_start();
 
-    // Check if the user is logged in and has admin privileges
     if ($_SESSION['role'] != 'admin'){
         header('Location:index.php'); 
     }
@@ -33,6 +32,8 @@
             <td><a href="import.php"><i class="fa fa-arrow-down" id="adIconTwo"></i><p class="iconLabel"><strong>import</strong></p></a></td>
             <td><a href="export.php"><i class="fa fa-arrow-up-from-bracket" id="adIconThree"></i><p class="iconLabel"><strong>export</strong></p></a></td>
             <td><a href="exportPDF.php"><i class="fa fa-file-pdf" id="adIconFour"></i><p class="iconLabel"><strong>export pdf</strong></p></a></td>
+			<td><a href="celebrations_admin.php" class="adminLinks"><i class="fa fa-calendar-check" id="adIconFive"></i><p class="iconLabel"><strong>celebrations</strong></p></a></td>
+			<td><a href="tags.php" class="adminLinks"><i class="fa fa-tags" id="adIconSix"></i><p class="iconLabel"><strong>tags</strong></p></a></td>
 </tr>
 <tr>
             <td><a href="export_powerpoint_options.php"><i class="fa fa-file-powerpoint" id="adIconFive"></i><p class="iconLabel"><strong>powerpoint</strong></p></a></td>
