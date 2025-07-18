@@ -1,118 +1,157 @@
-<?php $page_title = 'Admin > Create New Celebration'; ?>
-<?php 
-    require 'bin/functions.php';
-    require 'db_configuration.php';
-    include('header.php'); 
-    $page="celebrations_admin.php";
-    //verifyLogin($page);
+<?php
+require 'db_configuration.php';
 
-?>
+$upload_dir = 'images/celebration_images/';
 
-<div class="container">
-<style>
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Collect form data
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $resource_type = $_POST['resource_type'];
+    $celebration_type = $_POST['celebration_type'];
+    $celebration_date = $_POST['celebration_date'];
+    $tags = $_POST['tags'];
+    $resource_url = $_POST['resource_url'];
 
-    #title {
-        text-align: center; 
-        color: darkgoldenrod;
-}
+    $img_url = ''; // default no image uploaded
 
-    #guidance {
-        color: grey;
-        font-size: 10px;
+    // Handle image upload if exists
+    if (isset($_FILES['img_url']) && $_FILES['img_url']['error'] == UPLOAD_ERR_OK) {
+        $tmp_name = $_FILES['img_url']['tmp_name'];
+        $filename = basename($_FILES['img_url']['name']);
+        $target_path = $upload_dir . $filename;
+
+        // Move uploaded file to the target directory
+        if (move_uploaded_file($tmp_name, $target_path)) {
+            $img_url = $filename;
+        }
+        // You can add file type and size validation here
     }
 
-</style>
-    <!--Check the CeremonyCreated and if Failed, display the error message-->
-    <?php
-    // if(isset($_GET['createQuestion'])){
-    //     if($_GET["createQuestion"] == "fileRealFailed"){
-    //         echo '<br><h3 align="center" class="bg-danger">FAILURE - Your image is not real, Please Try Again!</h3>';
-    //     }
-    // }
-    // if(isset($_GET['createQuestion'])){
-    //     if($_GET["createQuestion"] == "answerFailed"){
-    //         echo '<br><h3 align="center" class="bg-danger">FAILURE - Your answer was not one of the choices, Please Try Again!</h3>';
-    //     }
-    // }
-    // if(isset($_GET['createQuestion'])){
-    //     if($_GET["createQuestion"] == "fileTypeFailed"){
-    //         echo '<br><h3 align="center" class="bg-danger">FAILURE - Your image is not a valid image type (jpg,jpeg,png,gif), Please Try Again!</h3>';
-    //     }
-    // }
-    // if(isset($_GET['createQuestion'])){
-    //     if($_GET["createQuestion"] == "fileExistFailed"){
-    //         echo '<br><h3 align="center" class="bg-danger">FAILURE - Your image does not exist, Please Try Again!</h3>';
-    //     }
-    // }
-  
-    ?>
-    <form action="create_the_celebration.php" method="POST" enctype="multipart/form-data">
+    // Insert query including img_url column
+    $sql = "INSERT INTO celebrations_tbl 
+        (title, description, resource_type, celebration_type, celebration_date, tags, resource_url, img_url) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = $db->prepare($sql);
+    if ($stmt) {
+        $stmt->bind_param("ssssssss", $title, $description, $resource_type, $celebration_type, $celebration_date, $tags, $resource_url, $img_url);
+        $stmt->execute();
+        $stmt->close();
+        header("Location: admin_celebrations.php");
+        exit();
+    } else {
+        die("Error preparing statement: " . $db->error);
+    }
+}
+
+include('header.php');
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Create Celebration</title>
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/responsive_style.css">
+    <style>
+        #title {
+            text-align: center;
+            color: darkgoldenrod;
+        }
+
+        form {
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .image-preview {
+            max-height: 250px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="title">Create New Celebration</h1>
+    <br>
+    <!-- Note enctype for file upload -->
+    <form method="post" action="create_celebration.php" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>Title</label>
+            <input name="title" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea name="description" class="form-control"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Resource Type</label>
+            <select name="resource_type" class="form-control" required>
+                <option value="PDF">PDF</option>
+                <option value="PPT">PPT</option>
+                <option value="HTML">HTML</option>
+                <option value="Image">Image</option>
+                <option value="Video">Video</option>
+                <option value="Audio">Audio</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Celebration Type</label>
+            <select name="celebration_type" class="form-control" required>
+                <option value="Person">Person</option>
+                <option value="Event">Event</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" name="celebration_date" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Tags (comma separated)</label>
+            <input name="tags" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Resource URL</label>
+            <input name="resource_url" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Upload Image</label>
+            <input type="file" name="img_url" id="imgInput" class="form-control-file" accept="image/*">
+
+            <label id="previewLabel" style="display:none; margin-top: 10px;">New Image Preview:</label><br>
+            <img id="imgPreview" src="#" alt="Image Preview" class="image-preview" style="display:none;">
+        </div>
+
         <br>
-        <h3 id="title">Create New Celebration</h3> <br>
-        
-        <div>
-            <label>Title</label> <br>
-            <input style=width:400px class="form-control" type="text" name="first_name" maxlength="100" size="50" required title="Please enter a title"></input>
+        <div style="text-align:center;">
+            <button type="submit" class="btn btn-success">Create Celebration</button>
+            <a href="admin_celebrations.php" class="btn btn-secondary">Cancel</a>
         </div>
-        
-        <div>
-            <label>Description</label> <br>
-            <input style=width:400px class="form-control" type="text" name="description" maxlength="100" size="50" required title="Please enter a description"></input>
-        </div>
-		
-        <div>
-            <label>Resource Type</label> <label id="guidance"> </label><br>
-            <select style=width:400px class="form-control" id="resource_type" name="resource_type">
-                <option value="pdf">PDF</option>
-                <option value="ppt">PPT</option>
-                <option value="html">HTML</option>
-                <option value="image">Image</option>
-				<option value="video">Video</option>
-				<option value="audio">Audio</option>
-            </select>
-        </div>
-		
-        <div>
-            <label>Celebration Type</label> <br>
-            <select style=width:400px class="form-control" id="celebration_type" name="celebration_type">
-                <option value="person">Person</option>
-                <option value="event">Event</option>
-            </select>
-        </div>
-		
-		<div>
-            <label>Celebration Date</label> <br>
-            <input style=width:400px class="form-control" placeholder="YYYY-MM-DD" type="text" name="celebration_date" maxlength="100" size="50" required title="Please enter a Celebration Type"></input>
-        </div>
-		
-		<div>
-            <label>Tags</label> <br>
-            <input style=width:400px class="form-control" type="text" name="tags" maxlength="100" size="50" required title="Please enter tags"></input>
-        </div>
-		
-		<div>
-            <label>Resource URL</label> <br>
-            <input style=width:400px class="form-control" type="text" name="resource_url" maxlength="100" size="50" required title="Please enter the Resource URL"></input>
-        </div>
-		
-		<div>
-            <label>Image URL</label> <br>
-            <input style=width:400px class="form-control" type="text" name="img_url" maxlength="100" size="50" required title="Please enter the Image URL"></input>
-        </div>
-         
-        <br><br>
-        <div align="center" class="text-left">
-            <button type="submit" name="submit" class="btn btn-primary btn-md align-items-center">Create Celebration</button>
-        </div>
-        <br> <br>
-
     </form>
-</div>
 
-<script>
-//var loadFile = function(event) {
-	//var image = document.getElementById('output');
-	//image.src = URL.createObjectURL(event.target.files[0]);
-//};
+    <script>
+        const imgInput = document.getElementById('imgInput');
+        const preview = document.getElementById('imgPreview');
+        const previewLabel = document.getElementById('previewLabel');
 
-</script>
+        imgInput.addEventListener('change', function(event) {
+            const [file] = event.target.files;
+            if (file && file.type.startsWith('image/')) {
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+                previewLabel.style.display = 'inline-block'; // show label when image selected
+                preview.onload = () => URL.revokeObjectURL(preview.src); // free memory
+            } else {
+                preview.src = '#';
+                preview.style.display = 'none';
+                previewLabel.style.display = 'none'; // hide label when no image
+            }
+        });
+    </script>
+</body>
+
+</html>

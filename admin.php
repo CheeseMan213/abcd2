@@ -32,26 +32,25 @@
             <td><a href="import.php"><i class="fa fa-arrow-down" id="adIconTwo"></i><p class="iconLabel"><strong>import</strong></p></a></td>
             <td><a href="export.php"><i class="fa fa-arrow-up-from-bracket" id="adIconThree"></i><p class="iconLabel"><strong>export</strong></p></a></td>
             <td><a href="exportPDF.php"><i class="fa fa-file-pdf" id="adIconFour"></i><p class="iconLabel"><strong>export pdf</strong></p></a></td>
-			<td><a href="celebrations_admin.php" class="adminLinks"><i class="fa fa-calendar-check" id="adIconFive"></i><p class="iconLabel"><strong>celebrations</strong></p></a></td>
-			<td><a href="tags.php" class="adminLinks"><i class="fa fa-tags" id="adIconSix"></i><p class="iconLabel"><strong>tags</strong></p></a></td>
-</tr>
-<tr>
+            <td><a href="admin_celebrations.php" class="adminLinks"><i class="fa fa-calendar-check" id="adIconFourteen"></i><p class="iconLabel"><strong>celebrations</strong></p></a></td>
+            <td><a href="tags.php" class="adminLinks"><i class="fa fa-tags" id="adIconFifteen"></i><p class="iconLabel"><strong>tags</strong></p></a></td>
+        </tr>
+        <tr>
             <td><a href="export_powerpoint_options.php"><i class="fa fa-file-powerpoint" id="adIconFive"></i><p class="iconLabel"><strong>powerpoint</strong></p></a></td>
             <td><a href="help.php"><i class="fa fa-circle-question" id="adIconSix"></i><p class="iconLabel"><strong>help</strong></p></a></td>
             <td><a href="games.php"><i class="fa fa-dice" id="adIconSeven"></i><p class="iconLabel"><strong>games</strong></p></a></td>
             <td><a href="my_favorite.php"><i class="fa fa-shirt" id="adIconEight"></i><p class="iconLabel"><strong>my favorite</strong></p></a></td>
             <td><a href="manageNominations.php" class="adminLinks"><i class="fa-solid fa-trophy" id="adIconOne"></i><p class="iconLabel"><strong>Nomination</strong></p></a></td>
-</tr>
-<tr class="lastCol">
+        </tr>
+        <tr class="lastCol">
             <td><a href="reports_summary.php"><i class="fa fa-file-lines" id="adIconNine"></i><p class="iconLabel"><strong>reports summary</strong></p></a></td>
             <td><a href="preferences.php"><i class="fa fa-gear" id="adIconTen"></i><p class="iconLabel"><strong>preferences</strong></p></a></td>
             <td><a href="artistEdit.php"><i class="fa fa-palette" id="adIconEleven"></i><p class="iconLabel"><strong>artists</strong></p></a></td>
-            <td><a href="resources.php"><i class="fa-solid fa-scroll" id="adIconTwelve"></i><p class="iconLabel"><strong>resources</strong></p></a></td>
-            <td><a href="admin_query.php" class="adminLinks"><i class="fa fa-user IconUse" id="adIconOne"></i><p class="iconLabel"><strong>advanced query</strong></p></a></td>
+            <td><a href="resources.php"><i class="fa fa-scroll" id="adIconTwelve"></i><p class="iconLabel"><strong>resources</strong></p></a></td>
+            <td><a href="admin_query.php" class="adminLinks"><i class="fa fa-user IconUse" id="adIconOne"></i><p class="iconLabel"><strong>advanced query</strong></p></a></td>            
+            
         </tr>
     </table>
 </div>
-     
 </body>
 </html>
- 

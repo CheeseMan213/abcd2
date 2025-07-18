@@ -1,9 +1,6 @@
 <?php
-require 'bin/functions.php';
 require 'db_configuration.php';
-include('chatbot.php');
 include('header.php');
-
 
 // Get the id from the URL, e.g., ?id=3
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;

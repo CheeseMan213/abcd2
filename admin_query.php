@@ -10,7 +10,6 @@ if ($_SESSION['role'] != 'admin'){
     exit;
 }
 
-// import the required files
 require 'bin/functions.php';
 require 'db_configuration.php';
 require 'api/objects/dress.php';
