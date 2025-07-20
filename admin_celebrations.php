@@ -3,7 +3,17 @@ require 'bin/functions.php';
 require 'db_configuration.php';
 include('header.php');
 
-$query = "SELECT * FROM celebrations_tbl";
+$query = "
+SELECT c.id, c.title, c.description, c.resource_type, c.celebration_type, 
+       c.celebration_date, c.resource_url, c.img_url,
+       GROUP_CONCAT(t.name SEPARATOR ', ') AS tags
+FROM celebrations_tbl c
+LEFT JOIN celebration_tags_tbl ct ON c.id = ct.celebration_id
+LEFT JOIN tags t ON ct.tag_id = t.id
+GROUP BY c.id, c.title, c.description, c.resource_type, 
+         c.celebration_type, c.celebration_date, c.resource_url, c.img_url
+";
+
 $GLOBALS['data'] = mysqli_query($db, $query);
 ?>
 
@@ -22,7 +32,6 @@ $GLOBALS['data'] = mysqli_query($db, $query);
             width: 100%;
         }
 
-        /* Thumbnail image style with zoom on hover */
         .thumbnailSize {
             height: 100px;
             width: 100px;
@@ -32,7 +41,6 @@ $GLOBALS['data'] = mysqli_query($db, $query);
             z-index: 1;
         }
 
-        /* On hover, zoom in and bring to front */
         .thumbnailSize:hover {
             transform: scale(3.5);
             position: relative;
@@ -40,20 +48,17 @@ $GLOBALS['data'] = mysqli_query($db, $query);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
-        /* Tags cell style - allow line breaks */
         #celebrationsTable tbody td.tagsCell {
             white-space: normal;
             max-width: 150px;
             word-wrap: break-word;
         }
 
-        /* Fixed layout and 100% width */
         #celebrationsTable {
             table-layout: fixed;
             width: 100%;
         }
 
-        /* All columns except Description and Image: equal widths, nowrap, ellipsis */
         #celebrationsTable th,
         #celebrationsTable td {
             white-space: nowrap;
@@ -62,7 +67,6 @@ $GLOBALS['data'] = mysqli_query($db, $query);
             vertical-align: middle;
         }
 
-        /* Description column (3rd) - wider and wrap text */
         #celebrationsTable td:nth-child(3),
         #celebrationsTable th:nth-child(3) {
             width: 20%;
@@ -72,23 +76,18 @@ $GLOBALS['data'] = mysqli_query($db, $query);
             text-overflow: clip;
         }
 
-        /* Image column (9th) - allow overflow so zoomed image can extend */
         #celebrationsTable td:nth-child(9),
         #celebrationsTable th:nth-child(9) {
             width: 100px;
-            /* fixed width for image */
             max-width: 100px;
             overflow: visible !important;
-            /* Important to allow zoom overflow */
             white-space: nowrap;
         }
 
-        /* Also override overflow for the entire row to visible to avoid clipping */
         #celebrationsTable tbody tr {
             overflow: visible !important;
         }
 
-        /* Title column (2nd) - show full text, wrap if needed */
         #celebrationsTable td:nth-child(2),
         #celebrationsTable th:nth-child(2) {
             white-space: normal !important;
@@ -161,18 +160,13 @@ $GLOBALS['data'] = mysqli_query($db, $query);
     <p>Created for SILC CS Class #3 PHP</p>
 </footer>
 
-<!--JQuery-->
+<!-- JQuery & DataTables Scripts -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-<!--Data Table-->
-<script type="text/javascript" charset="utf8"
-    src="https://code.jquery.com/jquery-3.3.1.js"></script>
 <script type="text/javascript" charset="utf8"
     src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" charset="utf8"
     src="https://cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js"></script>
-<script type="text/javascript" charset="utf8"
-    src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
 <script type="text/javascript" charset="utf8"
     src="https://cdn.datatables.net/buttons/1.5.2/js/dataTables.buttons.min.js"></script>
 <script type="text/javascript" charset="utf8"
@@ -182,28 +176,18 @@ $GLOBALS['data'] = mysqli_query($db, $query);
 <script type="text/javascript" charset="utf8"
     src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
 <script type="text/javascript" charset="utf8"
-    src="https://cdn.datatables.net/buttons/1.5.2/js/buttons.flash.min.js"></script>
-<script type="text/javascript" charset="utf8"
     src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
 <script type="text/javascript" charset="utf8"
     src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
 
-<script type="text/javascript" language="javascript">
-    $(document).ready(function() {
-
-        $('#celebrationsTable').DataTable({
-            dom: 'lfrtBip',
-            buttons: [
-                'copy', 'excel', 'csv', 'pdf'
-            ]
-        });
-
+<script type="text/javascript">
+    $(document).ready(function () {
         $('#celebrationsTable thead tr').clone(true).appendTo('#celebrationsTable thead');
-        $('#celebrationsTable thead tr:eq(1) th').each(function(i) {
+        $('#celebrationsTable thead tr:eq(1) th').each(function (i) {
             var title = $(this).text();
             $(this).html('<input type="text" placeholder="Search ' + title + '" />');
 
-            $('input', this).on('keyup change', function() {
+            $('input', this).on('keyup change', function () {
                 if (table.column(i).search() !== this.value) {
                     table
                         .column(i)
@@ -214,10 +198,11 @@ $GLOBALS['data'] = mysqli_query($db, $query);
         });
 
         var table = $('#celebrationsTable').DataTable({
+            dom: 'lfrtBip',
+            buttons: ['copy', 'excel', 'csv', 'pdf'],
             orderCellsTop: true,
             fixedHeader: true,
             retrieve: true
         });
-
     });
 </script>

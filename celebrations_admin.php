@@ -3,8 +3,13 @@ session_start();
 require 'bin/functions.php';
 require 'db_configuration.php';
 
-//Need to change line #6 in order to get the new data in to the table!!!!!!!!!!!
-$query = "SELECT * FROM celebrations_tbl";
+$query = "
+    SELECT c.*, GROUP_CONCAT(t.name SEPARATOR ', ') AS tag_list
+    FROM celebrations_tbl c
+    LEFT JOIN celebration_tags_tbl ct ON c.id = ct.celebration_id
+    LEFT JOIN tags t ON ct.tag_id = t.id
+    GROUP BY c.id
+";
 
 $GLOBALS['data'] = mysqli_query($db, $query);
 // $GLOBALS['topic'] = mysqli_query($db, $query);
@@ -105,7 +110,7 @@ $GLOBALS['data'] = mysqli_query($db, $query);
                                 <td>'.$row["resource_type"].' </span> </td>
                                 <td>'.$row["celebration_type"].' </span> </td>
 								<td>'.$row["celebration_date"].' </span> </td>
-								<td>'.$row["tags"].' </span> </td>
+								<td>'.$row["tag_list"].' </td>
 								<td>'.$row["resource_url"].' </span> </td>
 								<td>'.$row["img_url"].' </span> </td>
                                 <td><a class="btn btn-info btn-sm" href="display_the_user.php?id='.$row["id"].'">Display</a></td>

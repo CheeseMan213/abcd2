@@ -4,40 +4,73 @@ require 'db_configuration.php';
 $upload_dir = 'images/celebration_images/';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Collect form data
     $title = $_POST['title'];
     $description = $_POST['description'];
     $resource_type = $_POST['resource_type'];
     $celebration_type = $_POST['celebration_type'];
     $celebration_date = $_POST['celebration_date'];
-    $tags = $_POST['tags'];
     $resource_url = $_POST['resource_url'];
+    $tags_input = $_POST['tags'] ?? [];
 
-    $img_url = ''; // default no image uploaded
+    $img_url = '';
 
-    // Handle image upload if exists
+    // Handle image upload
     if (isset($_FILES['img_url']) && $_FILES['img_url']['error'] == UPLOAD_ERR_OK) {
         $tmp_name = $_FILES['img_url']['tmp_name'];
         $filename = basename($_FILES['img_url']['name']);
         $target_path = $upload_dir . $filename;
 
-        // Move uploaded file to the target directory
         if (move_uploaded_file($tmp_name, $target_path)) {
             $img_url = $filename;
         }
-        // You can add file type and size validation here
     }
 
-    // Insert query including img_url column
+    // Insert celebration
     $sql = "INSERT INTO celebrations_tbl 
-        (title, description, resource_type, celebration_type, celebration_date, tags, resource_url, img_url) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        (title, description, resource_type, celebration_type, celebration_date, resource_url, img_url) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $db->prepare($sql);
     if ($stmt) {
-        $stmt->bind_param("ssssssss", $title, $description, $resource_type, $celebration_type, $celebration_date, $tags, $resource_url, $img_url);
+        $stmt->bind_param("sssssss", $title, $description, $resource_type, $celebration_type, $celebration_date, $resource_url, $img_url);
         $stmt->execute();
+        $celebration_id = $stmt->insert_id;
         $stmt->close();
+
+        // Handle tags
+        foreach ($tags_input as $tag_value) {
+            $tag_value = trim($tag_value);
+
+            if (is_numeric($tag_value)) {
+                $tag_id = (int)$tag_value;
+            } else {
+                // Check if tag already exists
+                $check = $db->prepare("SELECT id FROM tags WHERE name = ?");
+                $check->bind_param("s", $tag_value);
+                $check->execute();
+                $check->store_result();
+
+                if ($check->num_rows > 0) {
+                    $check->bind_result($tag_id);
+                    $check->fetch();
+                } else {
+                    // Insert new tag
+                    $insert = $db->prepare("INSERT INTO tags (name) VALUES (?)");
+                    $insert->bind_param("s", $tag_value);
+                    $insert->execute();
+                    $tag_id = $insert->insert_id;
+                    $insert->close();
+                }
+                $check->close();
+            }
+
+            // Link tag to celebration
+            $link = $db->prepare("INSERT INTO celebration_tags_tbl (celebration_id, tag_id) VALUES (?, ?)");
+            $link->bind_param("ii", $celebration_id, $tag_id);
+            $link->execute();
+            $link->close();
+        }
+
         header("Location: admin_celebrations.php");
         exit();
     } else {
@@ -50,22 +83,21 @@ include('header.php');
 
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Create Celebration</title>
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/responsive_style.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <style>
         #title {
             text-align: center;
             color: darkgoldenrod;
         }
-
         form {
             max-width: 600px;
             margin: auto;
         }
-
         .image-preview {
             max-height: 250px;
             margin-top: 10px;
@@ -77,16 +109,17 @@ include('header.php');
 <body>
     <h1 id="title">Create New Celebration</h1>
     <br>
-    <!-- Note enctype for file upload -->
     <form method="post" action="create_celebration.php" enctype="multipart/form-data">
         <div class="form-group">
             <label>Title</label>
             <input name="title" class="form-control" required>
         </div>
+
         <div class="form-group">
             <label>Description</label>
             <textarea name="description" class="form-control"></textarea>
         </div>
+
         <div class="form-group">
             <label>Resource Type</label>
             <select name="resource_type" class="form-control" required>
@@ -98,6 +131,7 @@ include('header.php');
                 <option value="Audio">Audio</option>
             </select>
         </div>
+
         <div class="form-group">
             <label>Celebration Type</label>
             <select name="celebration_type" class="form-control" required>
@@ -105,14 +139,24 @@ include('header.php');
                 <option value="Event">Event</option>
             </select>
         </div>
+
         <div class="form-group">
             <label>Date</label>
             <input type="date" name="celebration_date" class="form-control" required>
         </div>
+
         <div class="form-group">
-            <label>Tags (comma separated)</label>
-            <input name="tags" class="form-control">
+            <label>Select or Add Tags</label>
+            <select name="tags[]" class="form-control" multiple id="tags-select" required>
+                <?php
+                $result = $db->query("SELECT id, name FROM tags ORDER BY name ASC");
+                while ($row = $result->fetch_assoc()) {
+                    echo "<option value='{$row['id']}'>{$row['name']}</option>";
+                }
+                ?>
+            </select>
         </div>
+
         <div class="form-group">
             <label>Resource URL</label>
             <input name="resource_url" class="form-control">
@@ -121,9 +165,8 @@ include('header.php');
         <div class="form-group">
             <label>Upload Image</label>
             <input type="file" name="img_url" id="imgInput" class="form-control-file" accept="image/*">
-
-            <label id="previewLabel" style="display:none; margin-top: 10px;">New Image Preview:</label><br>
-            <img id="imgPreview" src="#" alt="Image Preview" class="image-preview" style="display:none;">
+            <label id="previewLabel" style="display:none; margin-top: 10px;">Image Preview:</label><br>
+            <img id="imgPreview" src="#" alt="Image Preview" class="image-preview">
         </div>
 
         <br>
@@ -133,7 +176,19 @@ include('header.php');
         </div>
     </form>
 
+    <!-- JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        $(document).ready(function () {
+            $('#tags-select').select2({
+                tags: true,
+                placeholder: "Select or add tags",
+                width: '100%'
+            });
+        });
+
+        // Image preview
         const imgInput = document.getElementById('imgInput');
         const preview = document.getElementById('imgPreview');
         const previewLabel = document.getElementById('previewLabel');
@@ -143,15 +198,14 @@ include('header.php');
             if (file && file.type.startsWith('image/')) {
                 preview.src = URL.createObjectURL(file);
                 preview.style.display = 'block';
-                previewLabel.style.display = 'inline-block'; // show label when image selected
-                preview.onload = () => URL.revokeObjectURL(preview.src); // free memory
+                previewLabel.style.display = 'inline-block';
+                preview.onload = () => URL.revokeObjectURL(preview.src);
             } else {
                 preview.src = '#';
                 preview.style.display = 'none';
-                previewLabel.style.display = 'none'; // hide label when no image
+                previewLabel.style.display = 'none';
             }
         });
     </script>
 </body>
-
 </html>
