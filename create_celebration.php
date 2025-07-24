@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $tag_id = (int)$tag_value;
             } else {
                 // Check if tag already exists
-                $check = $db->prepare("SELECT id FROM tags WHERE name = ?");
+                $check = $db->prepare("SELECT id FROM tags WHERE tag_name = ?");
                 $check->bind_param("s", $tag_value);
                 $check->execute();
                 $check->store_result();
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $check->fetch();
                 } else {
                     // Insert new tag
-                    $insert = $db->prepare("INSERT INTO tags (name) VALUES (?)");
+                    $insert = $db->prepare("INSERT INTO tags (tag_name) VALUES (?)");
                     $insert->bind_param("s", $tag_value);
                     $insert->execute();
                     $tag_id = $insert->insert_id;
@@ -149,9 +149,9 @@ include('header.php');
             <label>Select or Add Tags</label>
             <select name="tags[]" class="form-control" multiple id="tags-select" required>
                 <?php
-                $result = $db->query("SELECT id, name FROM tags ORDER BY name ASC");
+                $result = $db->query("SELECT id, tag_name FROM tags ORDER BY tag_name ASC");
                 while ($row = $result->fetch_assoc()) {
-                    echo "<option value='{$row['id']}'>{$row['name']}</option>";
+                    echo "<option value='{$row['id']}'>{$row['tag_name']}</option>";
                 }
                 ?>
             </select>
