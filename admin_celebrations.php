@@ -6,7 +6,7 @@ include('header.php');
 $query = "
 SELECT c.id, c.title, c.description, c.resource_type, c.celebration_type, 
        c.celebration_date, c.resource_url, c.img_url,
-       GROUP_CONCAT(t.name SEPARATOR ', ') AS tags
+       GROUP_CONCAT(t.tag_name SEPARATOR ', ') AS tags
 FROM celebrations_tbl c
 LEFT JOIN celebration_tags_tbl ct ON c.id = ct.celebration_id
 LEFT JOIN tags t ON ct.tag_id = t.id
