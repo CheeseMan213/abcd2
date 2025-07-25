@@ -16,13 +16,20 @@ $stmt->bind_result($img_url);
 $stmt->fetch();
 $stmt->close();
 
-// Step 2: Delete the database entry
+// Step 2: Delete from celebration_tags_tbl
+$deleteTagsQuery = "DELETE FROM celebration_tags_tbl WHERE celebration_id = ?";
+$deleteTagsStmt = $db->prepare($deleteTagsQuery);
+$deleteTagsStmt->bind_param("i", $id);
+$deleteTagsStmt->execute();
+$deleteTagsStmt->close();
+
+// Step 3: Delete the database entry
 $deleteQuery = "DELETE FROM celebrations_tbl WHERE id = ?";
 $deleteStmt = $db->prepare($deleteQuery);
 $deleteStmt->bind_param("i", $id);
 
 if ($deleteStmt->execute()) {
-    // Step 3: Remove image file if it exists
+    // Step 4: Remove image file if it exists
     if (!empty($img_url)) {
         $imagePath = 'images/celebration_images/' . $img_url;
         if (file_exists($imagePath)) {

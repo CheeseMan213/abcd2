@@ -124,8 +124,33 @@ $GLOBALS['data'] = mysqli_query($db, $query);
                 </thead>
                 <tbody>
                     <?php
+					$tag_counts = [
+						'Sheroes' => 0,
+						'Heroes' => 0,
+						'Sarees' => 0,
+						'Weddings' => 0,
+						'Traditions' => 0,
+						'Womenswear' => 0,
+						'Menswear' => 0,
+						'Folk' => 0,
+						'Dances' => 0,
+						'Costumes' => 0,
+						'Professions' => 0,
+						'Scientists' => 0,
+						'Changemakers' => 0,
+						'Freedom Fighters' => 0,
+						'Armed Forces' => 0,
+						'Characters' => 0,
+					];
+					
                     if ($data->num_rows > 0) {
                         while ($row = $data->fetch_assoc()) {
+							$tags_array = array_map('trim', explode(',', $row["tags"]));
+							foreach ($tags_array as $tag) {
+							if (array_key_exists($tag, $tag_counts)) {
+								$tag_counts[$tag]++;
+								}
+							}
                             echo '<tr>
                                 <td>' . $row["id"] . '</td>
                                 <td>' . htmlspecialchars($row["title"]) . '</td>
@@ -154,6 +179,11 @@ $GLOBALS['data'] = mysqli_query($db, $query);
             </table>
         </div>
     </div>
+		<?php
+		foreach ($tag_counts as $tag => $count) {
+			echo "$tag tag used $count times<br>";
+		}
+		?>
 </body>
 
 <footer class="page-footer text-center">
