@@ -65,7 +65,17 @@ if (!isset($page_title)) {
                     </div>
                 </li>
                 <li class="nav-item active"><a class="nav-link" id="header" href="list_dresses.php">Dresses<span class="sr-only">(current)</span></a></li>
-                <li class="nav-item active"><a class="nav-link" id="header" href="celebrations.php">Celebrate<span class="sr-only">(current)</span></a></li>
+				
+				<!-- Original Redirect-->
+                <!--<li class="nav-item active"><a class="nav-link" id="header" href="celebrations.php">Celebrate<span class="sr-only">(current)</span></a></li>-->
+				<?php if (isset($_SESSION['role'])) { ?>
+                    <?php if ($_SESSION['role'] == 'admin') { ?>
+                        <li class="nav-item active"><a class="nav-link" id="header" href="admin_celebrations.php">Celebrate<span class="sr-only">(current)</span></a></li>
+                    <?php } ?>
+                <?php } else { ?>
+                    <li class="nav-item active"><a class="nav-link" id="header" href="celebrations.php">Celebrate<span class="sr-only">(current)</span></a></li>
+                <?php } ?> 
+				
                 <li class="nav-item active"><a class="nav-link" id="header" href="artistShowcase.php">Artists<span class="sr-only">(current)</span></a></li>
                 <li class="nav-item active"><a class="nav-link" id="header" href="nomination.php">Nomination<span class="sr-only">(current)</span></a></li>
                 <li class="nav-item active"><a class="nav-link" id="header" href="blogs.php">Blog<span class="sr-only">(current)</span></a></li>
