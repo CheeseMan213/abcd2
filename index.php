@@ -231,17 +231,56 @@ echo '<div text-align: left>
     <span class="pageLinksContainer">
     <span class="dressSorting">
 
-    <form action="index.php" method="get">
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+
+    <!-- Sort and Filter Buttons -->
+    <form action="index.php" method="get" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
         <button class="sortLink" type="submit" name="sort" value="ID">I.D.</button>
         <button class="sortLink" type="submit" name="sort" value="name">Name</button>
         <button class="sortLink" type="submit" name="sort" value="category">Category</button>
         <button class="sortLink" type="submit" name="sort" value="type">Type</button>
         <button class="sortLink" type="submit" name="sort" value="state_name">State</button>
-        <button class="sortLink" type="submit" name="sort" value= "shero">Sheroes</button>
+        <button class="filterLink" type="submit" name="filter" value="SHEROES">Sheroes</button>
+        <button class="filterLink" type="submit" name="filter" value="HEROES">Heroes</button>
+        <button class="filterLink" type="submit" name="filter" value="SAREES">Sarees</button>
+
+        <!-- Search Tags input (moved to the right inside the same form) -->
+        <div style="margin-left: 20px;">
+            <label for="tag_search"><strong>Search Tags:</strong></label><br>
+            <input type="text" id="tag_search" name="tag_search"
+                   value="<?php echo htmlspecialchars($_GET['tag_search'] ?? '') ?>"
+                   placeholder="Search by tag" style="width: 250px; padding: 4px;">
+        </div>
     </form>
 
+</div>
+    <form method="get" action="index.php" class="tagFilterForm">
+    <div style="margin-top: 20px;">
+        <label for="tags"><strong>Filter by Tags:</strong></label><br>
+        <select name="tags[]" id="tags" multiple size="6" style="width: 250px;">
+            <?php
+            $static_tags = [
+                "Sheroes", "Heroes", "Sarees", "Weddings", "Traditions", "Womenswear",
+                "Menswear", "Folk", "Dances", "Costumes", "Professions", "Scientists",
+                "Changemakers", "Freedom Fighters", "Armed Forces", "Characters"
+            ];
+            $selected_tags = $_GET['tags'] ?? [];
+
+            foreach ($static_tags as $tag) {
+                $selected = in_array($tag, $selected_tags) ? 'selected' : '';
+                echo "<option value='$tag' $selected>$tag</option>";
+            }
+            ?>
+        </select>
+        <br><small>Hold Ctrl (Windows) or Command (Mac) to select multiple</small>
+    </div>
+    <div style="margin-top: 10px;">
+        <button type="submit" class="btn btn-primary">Apply Filters</button>
+    </div>
+	
+</form>
     </span>
-    <span class="pageNavConatiner">
+   <span class="pageNavConatiner">
         <tr class="pageNav">
             <a class="pageLink pageFirst pageButton" href="?page=1&sort=<?php echo $Sort_string; ?>"><< First</a>
             <td class="<?php if($page <= 1){ echo 'disabled'; } ?>">
