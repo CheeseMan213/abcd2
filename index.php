@@ -198,7 +198,22 @@ echo '<div text-align: left>
    
 
     $sort_param = isset($_GET['sort']) ? $_GET['sort'] : 'id'; // default to 'id' if no sort param is given
-    $sql = "SELECT * FROM dresses ORDER BY ".$sort_param." ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
+	
+	// Multi-tag filter logic (for <select multiple>)
+if (!empty($_GET['tags'])) {
+    	$tags = $_GET['tags'];
+    	$tag_conditions = [];
+
+    	foreach ($tags as $tag) {
+        	$tag = mysqli_real_escape_string($db, $tag);
+        	$tag_conditions[] = "tag_line LIKE '%$tag%'";
+    	}
+
+    	$where_clause = implode(" OR ", $tag_conditions);
+    	$sql = "SELECT * FROM dresses WHERE ($where_clause) ORDER BY $sort_param ASC LIMIT $page_first_result, $no_of_records_per_page";
+} else {
+    $sql = "SELECT * FROM dresses ORDER BY $sort_param ASC LIMIT $page_first_result, $no_of_records_per_page";
+}
 
  
     if(!empty($all_sheroes)){
