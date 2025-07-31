@@ -201,51 +201,63 @@ echo '<div text-align: left>
 
  
     if (!empty($_GET['tag_search'])) {
-        $tag_search = mysqli_real_escape_string($db, $_GET['tag_search']);
-        $sql = "SELECT * FROM dresses WHERE tag_line LIKE '%$tag_search%' ORDER BY name ASC LIMIT $page_first_result, $no_of_records_per_page";
-    } else {
-        // Default query if no tag search
-        $sql = "SELECT * FROM dresses ORDER BY $sort_param ASC LIMIT $page_first_result, $no_of_records_per_page";
+    	$tag_search = mysqli_real_escape_string($db, $_GET['tag_search']);
+    	$sql = "SELECT * FROM dresses WHERE tag_line LIKE '%$tag_search%' ORDER BY name ASC LIMIT $page_first_result, $no_of_records_per_page";
 
-        if (!empty($all_sheroes)) {
-            $shero_query = implode(",", $all_sheroes);
-            $sql = "SELECT * FROM dresses WHERE id IN ($shero_query) ORDER BY CASE id ";
-            foreach ($all_sheroes as $index => $id) {
-                $sql .= "WHEN $id THEN " . ($index + 1) . " ";
-            }
-            $sql .= "END;";
-        } else if (!empty($all_heroes)) {
-            $hero_query = implode(",", $all_heroes);
-            $sql = "SELECT * FROM dresses WHERE id IN ($hero_query) ORDER BY CASE id ";
-            foreach ($all_heroes as $index => $id) {
-                $sql .= "WHEN $id THEN " . ($index + 1) . " ";
-            }
-            $sql .= "END;";
-        } else if (!empty($all_sarees)) {
-            $sarees_query = implode(",", $all_sarees);
-            $sql = "SELECT * FROM dresses WHERE id IN ($sarees_query) ORDER BY CASE id ";
-            foreach ($all_sarees as $index => $id) {
-                $sql .= "WHEN $id THEN " . ($index + 1) . " ";
-            }
-            $sql .= "END;";
-    
-        }
-        if(isset($_POST["id"])){
-            $sql = "SELECT * FROM dresses ORDER BY id ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
-        }
-        if(isset($_POST["name"])){
-            $sql = "SELECT * FROM dresses ORDER BY name ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
-        }
-        if(isset($_POST["state"])){
-            $sql = "SELECT * FROM dresses ORDER BY state_name ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
-        }
-        if(isset($_POST["category"])){
-            $sql = "SELECT * FROM dresses ORDER BY category ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
-        }
-        if(isset($_POST["type"])){
-            $sql = "SELECT * FROM dresses ORDER BY type ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
-        }
-    }
+    } elseif (!empty($_GET['tags'])) {
+    	$selected_tags = $_GET['tags'];
+    	$tag_conditions = [];
+
+    	foreach ($selected_tags as $tag) {
+        	$tag_safe = mysqli_real_escape_string($db, $tag);
+        	$tag_conditions[] = "tag_line LIKE '%$tag_safe%'";
+    	}
+
+    	$tag_filter_sql = implode(" OR ", $tag_conditions);
+    	$sql = "SELECT * FROM dresses WHERE ($tag_filter_sql) ORDER BY name ASC LIMIT $page_first_result, $no_of_records_per_page";
+
+    } else {
+    	$sql = "SELECT * FROM dresses ORDER BY $sort_param ASC LIMIT $page_first_result, $no_of_records_per_page";
+
+    	if (!empty($all_sheroes)) {
+        	$shero_query = implode(",", $all_sheroes);
+        	$sql = "SELECT * FROM dresses WHERE id IN ($shero_query) ORDER BY CASE id ";
+        	foreach ($all_sheroes as $index => $id) {
+            		$sql .= "WHEN $id THEN " . ($index + 1) . " ";
+        	}
+        	$sql .= "END";
+    	} elseif (!empty($all_heroes)) {
+        	$hero_query = implode(",", $all_heroes);
+        	$sql = "SELECT * FROM dresses WHERE id IN ($hero_query) ORDER BY CASE id ";
+        	foreach ($all_heroes as $index => $id) {
+            		$sql .= "WHEN $id THEN " . ($index + 1) . " ";
+        	}
+        	$sql .= "END";
+    	} elseif (!empty($all_sarees)) {
+        	$sarees_query = implode(",", $all_sarees);
+        	$sql = "SELECT * FROM dresses WHERE id IN ($sarees_query) ORDER BY CASE id ";
+        	foreach ($all_sarees as $index => $id) {
+            		$sql .= "WHEN $id THEN " . ($index + 1) . " ";
+        	}
+        	$sql .= "END";
+    	}
+
+    	if (isset($_POST["id"])) {
+        	$sql = "SELECT * FROM dresses ORDER BY id ASC LIMIT $page_first_result, $no_of_records_per_page";
+    	}
+    	if (isset($_POST["name"])) {
+        	$sql = "SELECT * FROM dresses ORDER BY name ASC LIMIT $page_first_result, $no_of_records_per_page";
+    	}
+    	if (isset($_POST["state"])) {
+        	$sql = "SELECT * FROM dresses ORDER BY state_name ASC LIMIT $page_first_result, $no_of_records_per_page";
+    	}
+    	if (isset($_POST["category"])) {
+        	$sql = "SELECT * FROM dresses ORDER BY category ASC LIMIT $page_first_result, $no_of_records_per_page";
+    	}
+    	if (isset($_POST["type"])) {
+        	$sql = "SELECT * FROM dresses ORDER BY type ASC LIMIT $page_first_result, $no_of_records_per_page";
+    	}
+}
 
 
     $res_data = mysqli_query($db, $sql);
