@@ -1,58 +1,99 @@
 <?php
-// tag_frequency.php
-session_start();
 require 'db_configuration.php';
 include('header.php');
 
-// Make sure only admins can access
-if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {
-    echo "<p>You do not have permission to view this page.</p>";
-    include('footer.php');
-    exit;
-}
+// Load static tags
+$tags = file('abcd_tags.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
-// STEP 1: Load tags from text file
-$tag_file = 'abcd_tags.txt';
-$tags = file($tag_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+// Handle tag assignment
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $dress_id = $_POST['dress_id'];
+    $selected_tags = $_POST['tags'] ?? [];
 
-// STEP 2: Ensure all static tags exist in DB
-foreach ($tags as $tag) {
-    $tag = trim($tag);
-    if (!empty($tag)) {
-        $stmt = $db->prepare("INSERT IGNORE INTO tags (tag_name) VALUES (?)");
-        $stmt->bind_param("s", $tag);
+    // Clear previous tags
+    $stmt = $db->prepare("DELETE FROM dresses_tags_tbl WHERE dress_id = ?");
+    if ($stmt) {
+        $stmt->bind_param("i", $dress_id);
         $stmt->execute();
+        $stmt->close();
+    }
+
+    // Insert new tags
+    $stmt = $db->prepare("INSERT INTO dresses_tags_tbl (dress_id, tag) VALUES (?, ?)");
+    if ($stmt) {
+        foreach ($selected_tags as $tag) {
+            $stmt->bind_param("is", $dress_id, $tag);
+            $stmt->execute();
+        }
         $stmt->close();
     }
 }
 
-// STEP 3: Fetch counts of celebrations per tag
-$sql = "
-    SELECT t.tag_name, COUNT(ct.celebration_id) AS tag_count
-    FROM tags t
-    LEFT JOIN celebration_tags_tbl ct ON t.id = ct.tag_id
-    GROUP BY t.tag_name
-";
-$result = mysqli_query($db, $sql);
+// Get list of dresses
+$dresses = $db->query("SELECT id, name FROM dresses");
 
-$db_counts = [];
-while ($row = mysqli_fetch_assoc($result)) {
-    $db_counts[$row['tag_name']] = $row['tag_count'];
-}
-
-echo "<div style='margin-top: 60px;'></div>"; 
-// STEP 4: Display Tag Frequency Report
-echo "<h2>Celebration Tag Frequency Report</h2>";
-echo "<table border='1' cellpadding='5' cellspacing='0'>";
-echo "<tr><th>Tag</th><th>Number of Celebrations</th></tr>";
-
-foreach ($tags as $tag) {
-    $tag = trim($tag);
-    $count = isset($db_counts[$tag]) ? $db_counts[$tag] : 0;
-    echo "<tr><td>{$tag}</td><td>{$count}</td></tr>";
-}
-
-echo "</table>";
-
-include('footer.php');
+// Generate tag frequency report
+$report_query = "SELECT tag, COUNT(*) as count FROM dresses_tags_tbl GROUP BY tag ORDER BY count DESC";
+$report = $db->query($report_query);
 ?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tag Management</title>
+    <style>
+        .tag-box {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: .5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Assign Tags to Characters</h2>
+
+    <?php if ($dresses && $dresses->num_rows > 0): ?>
+        <?php while ($dress = $dresses->fetch_assoc()): ?>
+            <?php
+            // Get existing tags
+            $existing = [];
+            $tagQ = $db->query("SELECT tag FROM dresses_tags_tbl WHERE dress_id = {$dress['id']}");
+            if ($tagQ) {
+                while ($row = $tagQ->fetch_assoc()) {
+                    $existing[] = $row['tag'];
+                }
+            }
+            ?>
+            <form method="POST" class="tag-box">
+                <h4><?= htmlspecialchars($dress['name']) ?></h4>
+                <input type="hidden" name="dress_id" value="<?= $dress['id'] ?>">
+                <?php foreach ($tags as $tag): ?>
+                    <label>
+                        <input type="checkbox" name="tags[]" value="<?= $tag ?>" <?= in_array($tag, $existing) ? 'checked' : '' ?>>
+                        <?= htmlspecialchars($tag) ?>
+                    </label><br>
+                <?php endforeach; ?>
+                <button type="submit">Save Tags</button>
+            </form>
+        <?php endwhile; ?>
+    <?php else: ?>
+        <p>No dresses found.</p>
+    <?php endif; ?>
+
+    <h3> Tag Frequency Report</h3>
+    <ul>
+        <?php
+        if ($report && $report->num_rows > 0) {
+            while ($row = $report->fetch_assoc()) {
+                echo "<li><strong>" . htmlspecialchars($row['tag']) . ":</strong> " . $row['count'] . " character(s)</li>";
+            }
+        } else {
+            echo "<li>No tags found or report failed. Error: " . htmlspecialchars($db->error) . "</li>";
+        }
+        ?>
+    </ul>
+</div>
+</body>
+</html>
