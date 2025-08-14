@@ -181,7 +181,7 @@ $GLOBALS['data'] = mysqli_query($db, $query);
     </div>
 		<?php
 		foreach ($tag_counts as $tag => $count) {
-			echo "$tag tag used $count times<br>";
+			echo "<strong>$tag:</strong> $count times used<br>";
 		}
 		?>
 </body>
