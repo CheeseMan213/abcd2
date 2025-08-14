@@ -9,7 +9,7 @@ require 'bin/functions.php';
 require 'db_configuration.php';
 include('chatbot.php');
 include('header.php');
-
+include("db.php");
 
 /*$sort_array=['name', 'category', 'type' , 'state_name' , 'status'];
      
@@ -200,22 +200,60 @@ echo '<div text-align: left>
     $sort_param = isset($_GET['sort']) ? $_GET['sort'] : 'id'; // default to 'id' if no sort param is given
 	
 	// Multi-tag filter logic (for <select multiple>)
-if (!empty($_GET['tags'])) {
-    	$tags = $_GET['tags'];
-    	$tag_conditions = [];
+    if (!empty($_GET['tag_search'])) {
+        $tag_search = mysqli_real_escape_string($db, $_GET['tag_search']);
 
-    	foreach ($tags as $tag) {
-        	$tag = mysqli_real_escape_string($db, $tag);
-        	$tag_conditions[] = "tag_line LIKE '%$tag%'";
-    	}
+        $sql_count = "
+            SELECT COUNT(DISTINCT d.id) AS total
+            FROM dresses d
+            LEFT JOIN dresses_tags_tbl dt ON d.id = dt.dress_id
+            WHERE dt.tag LIKE '%$tag_search%' OR d.tag_line LIKE '%$tag_search%'
+        ";
 
-    	$where_clause = implode(" OR ", $tag_conditions);
-    	$sql = "SELECT * FROM dresses WHERE ($where_clause) ORDER BY $sort_param ASC LIMIT $page_first_result, $no_of_records_per_page";
-} else {
-    $sql = "SELECT * FROM dresses ORDER BY $sort_param ASC LIMIT $page_first_result, $no_of_records_per_page";
-}
+        $sql = "
+            SELECT DISTINCT d.*
+            FROM dresses d
+            LEFT JOIN dresses_tags_tbl dt ON d.id = dt.dress_id
+            WHERE dt.tag LIKE '%$tag_search%' OR d.tag_line LIKE '%$tag_search%'
+            ORDER BY $sort_param ASC
+            LIMIT $page_first_result, $no_of_records_per_page
+        ";
+    } elseif (!empty($_GET['tags']) && is_array($_GET['tags'])) {
+        $in = array_map(function($t) use ($db){
+            return "'" . mysqli_real_escape_string($db, $t) . "'";
+        }, $_GET['tags']);
+        $in_list = implode(',', $in);
+
+        $sql_count = "
+            SELECT COUNT(DISTINCT d.id) AS total
+            FROM dresses d
+            JOIN dresses_tags_tbl dt ON d.id = dt.dress_id
+            WHERE dt.tag IN ($in_list)
+        ";
+
+        $sql = "
+            SELECT DISTINCT d.*
+            FROM dresses d
+            JOIN dresses_tags_tbl dt ON d.id = dt.dress_id
+            WHERE dt.tag IN ($in_list)
+            ORDER BY $sort_param ASC
+            LIMIT $page_first_result, $no_of_records_per_page
+        ";
+    } else {
+        $sql_count = "SELECT COUNT(*) AS total FROM dresses";
+        $result_count = mysqli_query($db, $sql_count);
+        $row_count = mysqli_fetch_assoc($result_count);
+        $total_pages = ceil($row_count['total'] / $no_of_records_per_page);
+
+        $sql = "SELECT * FROM dresses ORDER BY $sort_param ASC LIMIT $page_first_result, $no_of_records_per_page";
+    }
+
+
+
+
 
  
+    if (empty($_GET['tag_search']) && empty($_GET['tags'])) {
     if(!empty($all_sheroes)){
         $shero_query = implode(",", $all_sheroes);
         $sql = "SELECT * FROM dresses WHERE id IN ($shero_query) ORDER BY CASE id ";
@@ -238,6 +276,7 @@ if (!empty($_GET['tags'])) {
         }
         $sql .="END;";
     }
+
     if(isset($_POST["id"])){
         $sql = "SELECT * FROM dresses ORDER BY id ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
     }
@@ -248,11 +287,12 @@ if (!empty($_GET['tags'])) {
         $sql = "SELECT * FROM dresses ORDER BY state_name ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
     }
     if(isset($_POST["category"])){
-       $sql = "SELECT * FROM dresses ORDER BY category ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
+        $sql = "SELECT * FROM dresses ORDER BY category ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
     }
     if(isset($_POST["type"])){
         $sql = "SELECT * FROM dresses ORDER BY type ASC LIMIT " . $page_first_result . ',' . $no_of_records_per_page;
     }
+}
 
 
     $res_data = mysqli_query($db, $sql);
