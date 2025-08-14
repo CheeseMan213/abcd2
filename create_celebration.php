@@ -135,8 +135,8 @@ include('header.php');
         <div class="form-group">
             <label>Celebration Type</label>
             <select name="celebration_type" class="form-control" required>
-                <option value="Person">Person</option>
-                <option value="Event">Event</option>
+                <option value="Person-based">Person-based</option>
+                <option value="Event-based">Event-based</option>
             </select>
         </div>
 
@@ -147,7 +147,7 @@ include('header.php');
 
         <div class="form-group">
             <label>Select or Add Tags</label>
-            <select name="tags[]" class="form-control" multiple id="tags-select" required>
+            <select name="tags[]" class="form-control" multiple id="tags-select" >
                 <?php
                 $result = $db->query("SELECT id, tag_name FROM tags ORDER BY tag_name ASC");
                 while ($row = $result->fetch_assoc()) {

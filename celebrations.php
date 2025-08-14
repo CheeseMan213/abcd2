@@ -64,7 +64,10 @@ if ($q) {
 }
 
 // Celebration type filter
-if ($celebration_type) { $where[] = "celebration_type = '$celebration_type'"; }
+if ($celebration_type) { 
+    $celebration_type = mysqli_real_escape_string($db, $celebration_type);
+    $where[] = "celebration_type = '$celebration_type'"; 
+}
 
 // Resource Type filter (hard-coded values)
 $allowedResourceTypes = ['PDF','PPT','HTML','Image','Video','Audio'];
@@ -142,8 +145,8 @@ $image_width = 200;
 
     <select name="celebration_type">
         <option value="">All Celebration Types</option>
-        <option value="Person" <?php if($celebration_type==='Person') echo 'selected'; ?>>Person</option>
-        <option value="Event" <?php if($celebration_type==='Event') echo 'selected'; ?>>Event</option>
+        <option value="Person-based" <?php if($celebration_type==='Person-based') echo 'selected'; ?>>Person</option>
+        <option value="Event-based" <?php if($celebration_type==='Event-based') echo 'selected'; ?>>Event</option>
     </select>
 
     <!-- Multi-select Tags -->
